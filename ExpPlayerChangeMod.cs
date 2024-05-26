@@ -14,7 +14,7 @@ using MonoMod.Cil;
 
 namespace ExpPlayerChange
 {
-    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.0.0")]
+    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.2.0")]
     public class ExpPlayerChangeMod : BaseUnityPlugin
     {
         private void OnEnable()
@@ -32,6 +32,8 @@ namespace ExpPlayerChange
 
                 //Your hooks go here
                 IL.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
+                IL.Menu.UnlockDialog.TogglePerk += UnlockDialog_TogglePerk;
+                IL.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat; 
                 IsInit = true;
             }
             catch (Exception ex)
@@ -40,6 +42,49 @@ namespace ExpPlayerChange
                 throw;
             }
         }
+
+        private void CharacterSelectPage_UpdateSelectedSlugcat(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdsfld<ModManager>("JollyCoop"));
+            c.Emit(OpCodes.Pop);
+            c.Emit(OpCodes.Ldc_I4_0);
+        }
+
+        private void UnlockDialog_TogglePerk(ILContext il)
+        {
+            ILCursor c = new ILCursor(il);
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdloc(0),
+                x => x.MatchLdsfld<MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName>("Artificer"));
+            c.Index++;
+            c.Emit(OpCodes.Ldc_I4_0);
+            c.Emit(OpCodes.And);
+
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdloc(0),
+                x => x.MatchLdsfld<SlugcatStats.Name>("Red"));
+            c.Index++;
+            c.Emit(OpCodes.Ldc_I4_0);
+            c.Emit(OpCodes.And);
+            
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdloc(0),
+                x => x.MatchLdsfld<MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName>("Spear"));
+            c.Index++;
+            c.Emit(OpCodes.Ldc_I4_0);
+            c.Emit(OpCodes.And);
+
+            c.GotoNext(MoveType.After,
+                x => x.MatchLdloc(0),
+                x => x.MatchLdsfld<MoreSlugcats.MoreSlugcatsEnums.SlugcatStatsName>("Rivulet"));
+            c.Index++;
+            c.Emit(OpCodes.Ldc_I4_0);
+            c.Emit(OpCodes.And);
+
+        }
+
         // Code and explanation by forthbridge
         // Skip the 'if (this.index == 0 && ModManager.Expedition && this.menu.manager.rainWorld.ExpeditionMode)' condition
         private static void JollyPlayerSelector_Update(ILContext il)
