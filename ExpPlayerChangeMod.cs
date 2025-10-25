@@ -22,6 +22,8 @@ namespace ExpPlayerChange
             On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
         }
 
+        private bool isExpedition = false;
+
         private bool IsInit;
         private void RainWorldOnOnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
@@ -34,7 +36,9 @@ namespace ExpPlayerChange
                 //IL.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
                 On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update1;
                 IL.Menu.UnlockDialog.TogglePerk += UnlockDialog_TogglePerk;
-                IL.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat; 
+                IL.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat;
+                On.JollyCoop.JollyMenu.JollyPlayerOptions.ClassAllowsChangingPlayerOne += JollyPlayerOptions_ClassAllowsChangingPlayerOne;
+                On.JollyCoop.JollyMenu.JollyPlayerSelector.ctor += JollyPlayerSelector_ctor;
                 IsInit = true;
                 UnityEngine.Debug.Log("Expedition Player 1 Change hooks finished successfully.");
             }
@@ -43,6 +47,19 @@ namespace ExpPlayerChange
                 Logger.LogError(ex);
                 throw;
             }
+        }
+
+        private void JollyPlayerSelector_ctor(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_ctor orig, JollyCoop.JollyMenu.JollyPlayerSelector self, JollyCoop.JollyMenu.JollySetupDialog menu, Menu.MenuObject owner, UnityEngine.Vector2 pos, int index)
+        {
+            isExpedition = menu.manager.rainWorld.ExpeditionMode;
+            orig(self, menu, owner, pos, index);
+        }
+
+        private bool JollyPlayerOptions_ClassAllowsChangingPlayerOne(On.JollyCoop.JollyMenu.JollyPlayerOptions.orig_ClassAllowsChangingPlayerOne orig, SlugcatStats.Name name)
+        {
+            if (ModManager.Expedition && isExpedition)
+                return true;
+            else return orig(name);
         }
 
         private void JollyPlayerSelector_Update1(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyCoop.JollyMenu.JollyPlayerSelector self)
