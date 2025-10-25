@@ -14,7 +14,7 @@ using MonoMod.Cil;
 
 namespace ExpPlayerChange
 {
-    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.2.0")]
+    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.2.1")]
     public class ExpPlayerChangeMod : BaseUnityPlugin
     {
         private void OnEnable()
@@ -31,15 +31,26 @@ namespace ExpPlayerChange
                 if (IsInit) return;
 
                 //Your hooks go here
-                IL.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
+                //IL.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update;
+                On.JollyCoop.JollyMenu.JollyPlayerSelector.Update += JollyPlayerSelector_Update1;
                 IL.Menu.UnlockDialog.TogglePerk += UnlockDialog_TogglePerk;
                 IL.Menu.CharacterSelectPage.UpdateSelectedSlugcat += CharacterSelectPage_UpdateSelectedSlugcat; 
                 IsInit = true;
+                UnityEngine.Debug.Log("Expedition Player 1 Change hooks finished successfully.");
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex);
                 throw;
+            }
+        }
+
+        private void JollyPlayerSelector_Update1(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyCoop.JollyMenu.JollyPlayerSelector self)
+        {
+            orig(self);
+            if (self.index == 0 && ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode)
+            {
+                self.classButton.GetButtonBehavior.greyedOut = false;
             }
         }
 
@@ -85,6 +96,9 @@ namespace ExpPlayerChange
 
         }
 
+        // Obsolete: Does not work as for Watcher 1.5
+        // Reason unknown.
+
         // Code and explanation by forthbridge
         // Skip the 'if (this.index == 0 && ModManager.Expedition && this.menu.manager.rainWorld.ExpeditionMode)' condition
         private static void JollyPlayerSelector_Update(ILContext il)
@@ -98,11 +112,11 @@ namespace ExpPlayerChange
                 x => x.MatchLdarg(0),
                 x => x.MatchLdfld<JollyCoop.JollyMenu.JollyPlayerSelector>(nameof(JollyCoop.JollyMenu.JollyPlayerSelector.index)));
 
-            // The following will effectively turn the statement into '(index == 0 && false) && ModManager.Expedition && this.menu.manager.rainWorld.ExpeditionMode'
+            // The following will effectively turn the statement into '(false) && ModManager.Expedition && this.menu.manager.rainWorld.ExpeditionMode'
 
+            c.Emit(OpCodes.Pop);    // We remove the index value
             c.Emit(OpCodes.Ldc_I4_1); // Push 1 (true) onto the stack
-            c.Emit(OpCodes.Or); // Check if either of the last 2 values on the stack are true (the one we just pushed will always be true)
-
+            
             // The reason we emit true is because the following IL instruction:
             // Brtrue.s
             // Will branch to the target instruction if the current value on the stack is true
