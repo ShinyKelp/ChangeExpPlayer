@@ -14,15 +14,13 @@ using MonoMod.Cil;
 
 namespace ExpPlayerChange
 {
-    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.2.1")]
+    [BepInPlugin("ShinyKelp.ExpPlayer1Change", "ExpPlayer1Change", "1.3.0")]
     public class ExpPlayerChangeMod : BaseUnityPlugin
     {
         private void OnEnable()
         {
             On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
         }
-
-        private bool isExpedition = false;
 
         private bool IsInit;
         private void RainWorldOnOnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
@@ -51,21 +49,18 @@ namespace ExpPlayerChange
 
         private void JollyPlayerSelector_ctor(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_ctor orig, JollyCoop.JollyMenu.JollyPlayerSelector self, JollyCoop.JollyMenu.JollySetupDialog menu, Menu.MenuObject owner, UnityEngine.Vector2 pos, int index)
         {
-            isExpedition = menu.manager.rainWorld.ExpeditionMode;
             orig(self, menu, owner, pos, index);
         }
 
         private bool JollyPlayerOptions_ClassAllowsChangingPlayerOne(On.JollyCoop.JollyMenu.JollyPlayerOptions.orig_ClassAllowsChangingPlayerOne orig, SlugcatStats.Name name)
         {
-            if (ModManager.Expedition && isExpedition)
-                return true;
-            else return orig(name);
+            return true;
         }
 
         private void JollyPlayerSelector_Update1(On.JollyCoop.JollyMenu.JollyPlayerSelector.orig_Update orig, JollyCoop.JollyMenu.JollyPlayerSelector self)
         {
             orig(self);
-            if (self.index == 0 && ModManager.Expedition && self.menu.manager.rainWorld.ExpeditionMode)
+            if (self.index == 0)
             {
                 self.classButton.GetButtonBehavior.greyedOut = false;
             }
